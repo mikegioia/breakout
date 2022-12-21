@@ -1,0 +1,186 @@
+<html class="" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Brick Breaker v0.2</title>
+
+  <style>
+    html,
+    body {
+      background-color: #75edee;
+      font-family: Inter, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+        sans-serif;
+      font-size: 18px;
+      color: #0004f6;
+      height: 100%;
+      margin: 0;
+    }
+
+    #score {
+      color: white;
+      font-family:  monospace;
+      font-size: 2rem;
+      padding: 1rem 0 0 1rem;
+    }
+
+    #game {
+      background-image: url('background.png');
+      background-size: cover;
+      bottom: 0;
+      height: 100%;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width:  100%;
+    }
+
+    #bricks {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 0.5rem;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .brick {
+      background-color: #5d10c5;
+      border: 0.25rem solid black;
+      border-radius: 0.5rem;
+      height: 2.5rem;
+    }
+
+    .brick.destroyed {
+      background-color: transparent;
+    }
+
+    #ball {
+      background-color: #ea3323;
+      border: 0.25rem solid black;
+      border-radius: 1.25rem;
+      height: 2rem;
+      margin-top: 2vw;
+      position: absolute;
+      right: 30.5vw;
+      width: 2rem;
+    }
+
+    #paddle {
+      background-color: #0004f6;
+      border: 0.25rem solid black;
+      border-radius: 0.5rem;
+      height: 2rem;
+      bottom: 1rem;
+      left: 50%;
+      width: 15vw;
+      position: absolute;
+      transform: translateX(-50%);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Game Board -->
+  <div id="game">
+
+    <!-- Score at the top left -->
+    <div id="score">
+      Score: <span id="score-value">0</span>
+    </div>
+
+    <!-- Bricks section -->
+    <section id="bricks">
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+    </section>
+    <!-- End of Bricks -->
+
+    <!-- These are positoned with x,y coordinates -->
+    <div id="ball"></div>
+    <div id="paddle"></div>
+
+  </div>
+  <!-- End of Game Board -->
+    
+  <!-- Load scripts after HTML content -->
+  <script type="text/javascript">
+
+    var $paddle = document.getElementById('paddle');
+    var paddlePosition = 50;
+
+    /**
+     * Determines which key was pressed and moves the paddle.
+     */
+    function handleKeyPress (e) {
+      switch (e.keyCode) {
+        case 37:
+          movePaddleLeft();
+          break;
+        case 39:
+          movePaddleRight();
+          break;
+      }
+    }
+
+    function movePaddleLeft () {
+      paddlePosition = Math.max(paddlePosition - 10, 10);
+      $paddle.style.left = paddlePosition + '%';
+    }
+
+    function movePaddleRight () {
+      paddlePosition = Math.min(paddlePosition + 10, 90);
+      $paddle.style.left = paddlePosition + '%';
+    }
+
+    function setupBricks () {
+      // TODO
+    }
+
+    function moveBall () {
+      // TODO
+    }
+
+    function startGame () {
+      // Left/Right paddle movement
+      document.onkeydown = handleKeyPress;
+
+      // Ball movement
+      setupBricks();
+      moveBall();
+    }
+
+    startGame();
+
+  </script>
+</body>
+</html>
