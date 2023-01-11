@@ -1,0 +1,356 @@
+<html class="" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Brick Breaker v0.3</title>
+
+  <style>
+    html,
+    body {
+      background-color: #75edee;
+      font-family: Inter, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+        sans-serif;
+      font-size: 18px;
+      color: #0004f6;
+      height: 100%;
+      margin: 0;
+    }
+
+    #score {
+      color: white;
+      font-family:  monospace;
+      font-size: 2rem;
+      padding: 1rem 0 0 1rem;
+    }
+
+    #game {
+      background-image: url('background.png');
+      background-size: cover;
+      bottom: 0;
+      height: 100%;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width:  100%;
+    }
+
+    #bricks {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 0.5rem;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .brick {
+      background-color: #5d10c5;
+      border: 0.25rem solid black;
+      border-radius: 0.5rem;
+      height: 2.5rem;
+    }
+
+    .brick:nth-child(-n + 8) {
+      background-color: fuchsia;
+    }
+
+    .brick:nth-child(n + 9):nth-child(-n + 16) {
+      background-color: yellow;
+    }
+
+    .brick:nth-child(n + 17):nth-child(-n + 24) {
+      background-color: lime;
+    }
+
+    .brick:nth-child(n + 25):nth-child(-n + 32) {
+      background-color: cyan;
+    }
+
+    .brick.destroyed {
+      background-color: transparent;
+    }
+
+    #ball {
+      background-color: white;
+      border-radius: 1.25rem;
+      border: 0.25rem solid black;
+      height: 2rem;
+      left: 1rem;
+      position: absolute;
+      top:  1rem;
+      transition-duration: 50ms, 50ms;
+      transition-property: left, top;
+      transition-timing-function: ease-out, ease-out;
+      width: 2rem;
+    }
+
+    #paddle {
+      background-color: darkgray;
+      border: 0.25rem solid black;
+      border-left: 1rem solid red;
+      border-right: 1rem solid red;
+      border-radius: 1rem;
+      height: 2rem;
+      bottom: 1rem;
+      left: 50%;
+      width: 15vw;
+      position: absolute;
+      transition-duration: 300ms;
+      transition-property: left;
+      transition-timing-function: ease-out;
+      transform: translateX(-50%);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Game Board -->
+  <div id="game">
+
+    <!-- Score at the top left -->
+    <div id="score">
+      Score: <span id="score-value">0</span>
+    </div>
+
+    <!-- Bricks section -->
+    <section id="bricks">
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+    </section>
+    <!-- End of Bricks -->
+
+    <!-- These are positoned with x,y coordinates -->
+    <div id="ball"></div>
+    <div id="paddle"></div>
+
+  </div>
+  <!-- End of Game Board -->
+    
+  <!-- Load scripts after HTML content -->
+  <script type="text/javascript">
+
+    /**
+     * Reference to the HTML element for the paddle.
+     * This is stored so that we can do things with
+     * the paddle, like moving it left and right.
+     */
+    var $paddle = document.getElementById('paddle');
+
+    /**
+     * Current paddle position, from 0 to 100. 0 is all the
+     * way to the left, and 100 is all the way to the right.
+     */
+    var paddlePosition = 50;
+
+    /**
+     * Referenec to the HTML element for the ball.
+     * This is stored so that we can track its position and
+     * also move it to the next position on each step.
+     */
+    var $ball = document.getElementById('ball');
+
+    /**
+     * Used to track the ball movement. This is a number from
+     * 0 to 359, representing the degree of movement in the
+     * 2-dimensional plane. 0 is up, 90 is right, 180 is down,
+     * and 270 is left.
+     */
+    var ballDirection = 180;
+
+    /**
+     * How many milliseconds to "tick" before moving the ball again.
+     * This can be tweaked to move faster/slower. Lowering this will
+     * make the ball move faster.
+     */
+    var ballHeartbeatMs = 50;
+
+    /**
+     * The position on the X axis that the ball lies.
+     */
+    var ballXPosition = null;
+
+    /**
+     * The position on the Y axis that the ball lies.
+     */
+    var ballYPosition = null;
+
+    /**
+     * Ball movement interval. Used for starting and stopping.
+     */
+    var ballInterval = null;
+
+    /**
+     * The maximum X value, which is also the screen width in pixels.
+     */
+    var xMax = window.innerWidth;
+
+    /**
+     * The maximum Y value, which is also the screen height in pixels.
+     */
+    var yMax = window.innerHeight;
+
+    /**
+     * Determines which key was pressed and moves the paddle.
+     */
+    function handleKeyPress (e) {
+      switch (e.keyCode) {
+        case 37: // left arrow
+          movePaddleLeft();
+          break;
+        case 39: // right arrow
+          movePaddleRight();
+          break;
+        case 80: // P for pause
+        case 83: // S for start
+          startStopBall();
+          break;
+      }
+    }
+
+    function movePaddleLeft () {
+      paddlePosition = Math.max(paddlePosition - 10, 10);
+      $paddle.style.left = paddlePosition + '%';
+    }
+
+    function movePaddleRight () {
+      paddlePosition = Math.min(paddlePosition + 10, 90);
+      $paddle.style.left = paddlePosition + '%';
+    }
+
+    function startStopBall () {
+      if (ballInterval) {
+        stopBallInterval();
+      } else {
+        startBallInterval();
+      }
+    }
+
+    /**
+     * Updates the maximum X and Y values (window size)
+     * when the window is resized.
+     */
+    function handleWindowResize () {
+      xMax = window.innerWidth;
+      yMax = window.innerHeight;
+
+      ballXPosition = (window.innerWidth / 2) - ($ball.offsetWidth / 2);
+      ballYPosition = (window.innerHeight / 2) - ($ball.offsetHeight / 2);
+
+      $ball.style.left = ballXPosition + 'px';
+      $ball.style.top = ballYPosition + 'px';
+    }
+
+    /**
+     * Moves the ball one location, and then calls itself again
+     * to continue moving the ball forever.
+     */
+    function moveBall () {
+      // Check to see if the ball is currently hitting something.
+      // If so, we need to change direction and move the ball in
+      // the new direction.
+      detectHitAndUpdateDirection();
+
+      // Incremement the position in the direction the ball is moving
+      if (ballDirection < 90 || ballDirection > 270) {
+        // Moving up
+        ballYPosition = ballYPosition - 10;
+      } else {
+        // Moving down
+        ballYPosition = ballYPosition + 10;
+      }
+
+      if (ballDirection < 180) {
+        // Moving left
+        ballXPosition = ballXPosition - 10;
+      } else {
+        // Moving right
+        ballXPosition = ballXPosition + 10;
+      }
+
+      //$ball.style.left = ballXPosition + 'px';
+      $ball.style.top = ballYPosition + 'px';
+    }
+
+    /**
+     * @TODO Make this better, detect paddle, blocks and walls
+     */
+    function detectHitAndUpdateDirection () {
+      var ballInfo = $ball.getBoundingClientRect();
+
+      if (ballInfo.top <= 0) {
+        ballDirection = 180; // move down
+      } else if (ballInfo.bottom >= yMax) {
+        ballDirection = 0; // move up
+      }
+    }
+
+    /**
+     * Set up a new interval which runs every ballHeartbeatMs milliseconds.
+     */
+    function startBallInterval () {
+      ballInterval = setInterval(moveBall, ballHeartbeatMs);
+    }
+
+    /**
+     * Stops the timer that calls the next ball movement
+     * and stops the ball from moving.
+     */
+    function stopBallInterval () {
+      clearInterval(ballInterval);
+      ballInterval = null;
+    }
+
+    /**
+     * This is our entire game logic, and this is what is called at
+     * the start. We want to set up the different event handlers,
+     * update any positions for different HTML elements, and also
+     * start an infinite loop that moves the ball.
+     */
+    function startGame () {
+      // Left/Right paddle movement
+      document.onkeydown = handleKeyPress;
+
+      // When the windows is resized, update the max positions
+      window.onresize = handleWindowResize;
+
+      // Position the ball and other window-dependent elements
+      handleWindowResize();
+    }
+
+    // HERE IS THE BUG, FIX THIS!
+    // WHAT IS WRONG HERE? WHAT NEEDS TO BE CHANGED?
+    startTheGame();
+
+  </script>
+</body>
+</html>
